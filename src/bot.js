@@ -64,7 +64,8 @@ bot.on('message', async(ctx, next) => {
       const x = await TG.findOneAndUpdate({ chatId: chatId,  phone: phone })
     }
 
-    ctx.session.nextCommand = 'password'
+    if (ctx.session != undefined)
+      ctx.session.nextCommand = 'password'
   }
   if (ctx.message.text?.startsWith('/send')) {
     const chatId = ctx.message.chat.id
