@@ -22,11 +22,15 @@ export const COMMANDS = {
 
 export const PROVIDER_TOKEN_PAYMENTS = {
   sber: {
-    name: 'Сбер',
-    token: '401643678:TEST:0508416f-dcbb-4995-a89a-cc641c5cef58'
+    name: 'Сбербанк',
+    token: '401643678:TEST:76f4b9b7-685c-43e2-8538-2ad0782429ee'
   },
   payMaster: {
     name: 'PayMaster',
-    token: '1744374395:TEST:10936d181364e26cbe8d'
+    token: '1744374395:TEST:500ee7556fce732f2909'
+  },
+  uCassa{
+    name: 'ЮКасса',
+    token: '381764678:TEST:46023'
   }
 }
