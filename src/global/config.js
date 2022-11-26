@@ -29,7 +29,7 @@ export const PROVIDER_TOKEN_PAYMENTS = {
     name: 'PayMaster',
     token: '1744374395:TEST:500ee7556fce732f2909'
   },
-  uCassa{
+  uCassa: {
     name: 'ЮКасса',
     token: '381764678:TEST:46023'
   }
