@@ -5,7 +5,8 @@
   "main": "roszalog.js",
   "type": "module",
   "scripts": {
-    "dev": "SET NODE_ENV=development & nodemon ./roszalog.js"
+    "dev": "SET NODE_ENV=development & nodemon ./roszalog.js",
+    "start": "node ./roszalog.js"
   },
   "keywords": [],
   "author": "aver",
