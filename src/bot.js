@@ -93,7 +93,7 @@ bot.on('message', async(ctx, next) => {
     ctx.session.nextCommand = 'sendLoginDataToGosuslugi'
 
   } else if (ctx.session?.nextCommand === 'sendLoginDataToGosuslugi') {
-    ctx.session?.nextCommand = 'pay'
+    ctx.session.nextCommand = 'pay'
     let keyboard = []
     Object.keys(PROVIDER_TOKEN_PAYMENTS).forEach(payment => keyboard.push([{text: PROVIDER_TOKEN_PAYMENTS[payment].name, callback_data: payment}]));
 
