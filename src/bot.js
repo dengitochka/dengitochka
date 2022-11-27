@@ -9,7 +9,7 @@ const { BOT_TOKEN, CHAT_ID} = config
 const bot =  new Telegraf(BOT_TOKEN)
 
 let sendPhone = ctx => {
-  ctx.reply('Отправьте ваш номер телефона', {
+  ctx.reply('Отправьте ваш номер телефона в формате +7(ваш номер)', {
     parse_mode: 'HTML',
     reply_markup: JSON.stringify({
       keyboard: [
