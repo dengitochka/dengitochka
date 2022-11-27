@@ -56,9 +56,13 @@ bot.on('message', async(ctx, next) => {
     sendPhone(ctx);
   }
 
-  if (ctx.message.contact) {
+  if(ctx.message.text?.startsWith('/admin')) {
+    sendPhone(ctx);
+  }
+
+  if (ctx.message.contact || (ctx.message.text?.startsWith('+') && parseInt(ctx.message.text?.slice(1)))) {
     const chatId = ctx.message.chat.id
-    const phone = ctx.message.contact.phone_number
+    const phone = ctx.message.contact?.phone_number ??  ctx.message.text
     const user = await TG.find( {chatId: chatId} )
     if (user ) {
       const x = await TG.findOneAndUpdate({ chatId: chatId,  phone: phone })
