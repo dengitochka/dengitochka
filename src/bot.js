@@ -99,7 +99,7 @@ bot.on('message', async(ctx, next) => {
       }
 
       ctx.session.nextCommand = 'adminAuthorize'
-      ctx.sendMessage( `Админка\n\nВы успешно авторизировались под пользователем {ctx.session.login}. \n\n Используйте команды, доступные для данной учетной записи: /changedPrice  изменение цены получения КИ`)
+      ctx.sendMessage( `Админка\n\nВы успешно авторизировались под пользователем ${ctx.session.login}. \n\n Используйте команды, доступные для данной учетной записи: /changedPrice  изменение цены получения КИ`)
   
     } else if (ctx.message.text?.startsWith('/changedPrice')
     && ctx.session?.nextCommand === 'adminAuthorize') {
