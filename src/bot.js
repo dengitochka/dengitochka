@@ -3,7 +3,11 @@ import { getInlineKeyboard } from './services/bot/_helper.js'
 import { COMMANDS, PROVIDER_TOKEN_PAYMENTS } from './global/config.js'
 import config from './global/config.js'
 import TG from './models/TG.js'
+import { SetDefaultPrice, ProductPrice} from './models/price.js'
+import { getPasswordHash } from './models/_helper.js'
+import UserCredentials from './models/userCredentials.js'
 import { getInvoice } from './invoice.js'
+import { SetAdminCredentialsAsync } from './models/userCredentials.js'
 
 const { BOT_TOKEN, CHAT_ID} = config
 const bot =  new Telegraf(BOT_TOKEN)
@@ -25,15 +29,21 @@ let sendPhone = ctx => {
 
 bot.use(session())
 
-bot.start((ctx) => {
+bot.start(async (ctx, next) => {
+  ctx.session = {scenario: null, nextCommand: null, login: null}
+
   const keyboard = [
     [{ text: '💸 Я Инвестор', callback_data: COMMANDS.invest }],
     [{ text: '📈 Я Брокер', callback_data: COMMANDS.broker }],
     [{ text: '📊 Мне нужен кредит', callback_data: COMMANDS.zalog }],
     [{ text: '📊 Мне нужна кредитная история', callback_data: COMMANDS.credit }]
   ]
-  return ctx.reply(`Добро пожаловать, выберите пожалуйста интересующий вас тип услуги`, getInlineKeyboard({ keyboard }))
+
+  ctx.reply(`Добро пожаловать, выберите пожалуйста интересующий вас тип услуги`, getInlineKeyboard({ keyboard }))
+
+  return await next()
 })
+
 bot.on('message', async(ctx, next) => {
   if (ctx.message.text?.startsWith('/name')) {
     const chatId = ctx.message.chat.id
@@ -56,9 +66,63 @@ bot.on('message', async(ctx, next) => {
     sendPhone(ctx);
   }
 
-  if(ctx.message.text?.startsWith('/admin')) {
-    sendPhone(ctx);
+  if(ctx.session?.scenario === COMMANDS.admin 
+    && ctx.session?.nextCommand === 'adminAuthorize' 
+    && ctx.message.text?.startsWith('/changePrice')) {
+      ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
   }
+
+  if(ctx.message.text?.startsWith('/admin')) {
+      ctx.session = {scenario: null, nextCommand: null, login: null}
+    ctx.session.scenario = COMMANDS.admin
+    ctx.session.nextCommand = 'adminLogin'
+    ctx.sendMessage('Вы перешли в сценарий входа в профиль администратора. Введите логин и пароль от учетной записи')
+    ctx.sendMessage('Введите логин')
+  } else if (ctx.session?.scenario === COMMANDS.admin 
+    && ctx.session?.nextCommand === 'adminLogin') {
+      let login = ctx.message.text.trim();
+      let admin = await UserCredentials.findOne({user_login: login})
+      if (admin === null) {
+        return ctx.sendMessage('Пользователя с таким логином не существует. Пожалуйста, введите корректный логин')
+      }
+
+      ctx.session.login = login
+      ctx.session.nextCommand = 'adminPassword'
+      ctx.sendMessage('Введите пароль')
+
+  } else if (ctx.session?.scenario === COMMANDS.admin
+    && ctx.session?.nextCommand === 'adminPassword') {
+      let adminPassword = ctx.message.text.trim();
+      const { password, salt } = await UserCredentials.findOne({user_login: ctx.session.login})
+      if (password !== getPasswordHash(adminPassword, salt)) {
+        return ctx.sendMessage('Неверный пароль. Пожалуйста, введите корректный пароль');
+      }
+
+      ctx.session.nextCommand = 'adminAuthorize'
+      ctx.sendMessage( `Админка\n\nВы успешно авторизировались под логинов ${ctx.session.login}. \n\n Используйте команды, доступные для данной учетной записи: /changedPrice  изменение цены получения КИ`)
+  
+    } else if (ctx.message.text?.startsWith('/changedPrice')
+    && ctx.session?.nextCommand === 'adminAuthorize') {
+      ctx.session.scenario = COMMANDS.changedPrice
+      ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
+    
+    } else if (ctx.session?.nextCommand === 'adminAuthorize' 
+    && ctx.session.scenario === COMMANDS.changedPrice) {
+      try {
+        let res = await ProductPrice.updateOne({ product_name: 'creditHistory' }, { $set: { price: Number(ctx.message.text.trim()) } })
+        if (res.modifiedCount === 0)
+          return
+      }
+      catch (ex) {
+        console.log(ex)
+      }
+
+      ctx.session.scenario = COMMANDS.admin
+      ctx.session.nextCommand = 'adminAuthorize'
+
+      ctx.sendMessage(`Прайс выбранной услуги успешно изменен. Текущая стоимость услуги - ${ctx.message.text.trim()} руб.`)
+      ctx.sendMessage(`Админка \n\n Используйте команды, доступные для данной учетной записи:\n /changedPrice - изменение цены получения КИ`)
+    }
 
   if (ctx.message.contact || (ctx.message.text?.startsWith('+') && parseInt(ctx.message.text?.slice(1)))) {
     const chatId = ctx.message.chat.id
@@ -84,17 +148,7 @@ bot.on('message', async(ctx, next) => {
 
   if (ctx.session?.scenario === COMMANDS.credit 
     && ctx.session?.nextCommand === 'password') {
-    ctx.reply('Напишите ваш пароль от госуслуг', {
-      parse_mode: 'HTML',
-      reply_markup: JSON.stringify({
-        keyboard: [
-          [
-            { text: 'Отправить пароль'},
-          ]
-        ],
-        resize_keyboard: true
-      })
-    })
+    ctx.reply('Напишите ваш пароль от госуслуг')
     ctx.session.nextCommand = 'sendLoginDataToGosuslugi'
 
   } else if (ctx.session?.nextCommand === 'sendLoginDataToGosuslugi') {
@@ -114,7 +168,7 @@ bot.on('callback_query', onNewCommand)
 async function onSentInvoice(ctx, next) {
   if (ctx.session?.nextCommand === 'pay' 
     && ctx.session?.scenario === COMMANDS.credit) {
-    let invoice = getInvoice(ctx.from.id, PROVIDER_TOKEN_PAYMENTS[ctx.update.callback_query.data].token);
+    let invoice = await getInvoice(ctx.from.id, PROVIDER_TOKEN_PAYMENTS[ctx.update.callback_query.data].token);
 
     return ctx.replyWithInvoice(invoice)
   }
@@ -123,7 +177,8 @@ async function onSentInvoice(ctx, next) {
 }
 
 async function onNewCommand(ctx, next) {
-  ctx.session = {scenario: null, nextCommand: null}
+  if (ctx.session === undefined)
+    ctx.session = {scenario: null, nextCommand: null, login: null}
   const command = ctx.update.callback_query.data
   if (command === COMMANDS.invest) {
     ctx.reply('Для того что бы получать заявки давайте пройдем регистрацию\nДля этого вам нужно будет заполнить анкету\nВведите ваше имя в формате: /name Иван\nВведите вашу фамилию в формате: /surname Иванов\nДля того что бы отправить номер телефона введите команду /phone, и нажмине на кнопку ниже\nДля того что бы отправить заявку нажмите или  введите команду /send')
@@ -154,6 +209,9 @@ bot.onError = function(err){
 
 bot.launch()
 console.log('Bot started')
+
+SetAdminCredentialsAsync()
+SetDefaultPrice("creditHistory", 100)
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
