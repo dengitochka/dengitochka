@@ -7,7 +7,7 @@ import { SetDefaultPrice, ProductPrice} from './models/price.js'
 import { getPasswordHash } from './models/_helper.js'
 import UserCredentials from './models/userCredentials.js'
 import { getInvoice } from './invoice.js'
-import { SetAdminCredentialsAsync } from './models/userCredentials.js'
+import { InitializeAdminCredentialsAsync, UpdateAdminPassword } from './models/userCredentials.js'
 
 const { BOT_TOKEN, CHAT_ID} = config
 const bot =  new Telegraf(BOT_TOKEN)
@@ -32,17 +32,26 @@ bot.use(session())
 bot.start(async (ctx, next) => {
   ctx.session = {scenario: null, nextCommand: null, login: null}
 
-  const keyboard = [
+  /*const keyboard = [
     [{ text: '💸 Я Инвестор', callback_data: COMMANDS.invest }],
     [{ text: '📈 Я Брокер', callback_data: COMMANDS.broker }],
     [{ text: '📊 Мне нужен кредит', callback_data: COMMANDS.zalog }],
     [{ text: '📊 Мне нужна кредитная история', callback_data: COMMANDS.credit }]
-  ]
+  ]*/
+
+  const keyboard = [[{ text: '📊 Мне нужна кредитная история', callback_data: COMMANDS.credit }]]
 
   ctx.reply(`Добро пожаловать, выберите пожалуйста интересующий вас тип услуги`, getInlineKeyboard({ keyboard }))
 
   return await next()
 })
+
+function getAvailableAdminCommands(ctx, additionalString) {
+  return ctx.sendMessage(`Админка ${additionalString ?? ''}` + 
+  `\n\nИспользуйте команды, доступные для данной учетной записи: 
+/changedPrice - изменение цены получения КИ
+/changePassword - изменение пароля от учетной записи`)
+}
 
 bot.on('message', async(ctx, next) => {
   if (ctx.message.text?.startsWith('/name')) {
@@ -99,9 +108,26 @@ bot.on('message', async(ctx, next) => {
       }
 
       ctx.session.nextCommand = 'adminAuthorize'
-      ctx.sendMessage( `Админка\n\nВы успешно авторизировались под пользователем ${ctx.session.login}. \n\n Используйте команды, доступные для данной учетной записи: /changedPrice  изменение цены получения КИ`)
+      getAvailableAdminCommands(ctx, `Вы успешно авторизировались под пользователем ${ctx.session.login}.`)
   
-    } else if (ctx.message.text?.startsWith('/changedPrice')
+    } else if(ctx.session?.scenario === COMMANDS.admin 
+      && ctx.session?.nextCommand === 'adminAuthorize' 
+      && ctx.message.text?.startsWith('/changePassword')) {
+        ctx.session.scenario = COMMANDS.changedPassword
+        ctx.sendMessage('Введите новый пароль для текущей учетной записи')
+    }else if(ctx.session?.nextCommand === 'adminAuthorize' 
+    && ctx.session.scenario === COMMANDS.changedPassword) {
+      if (UpdateAdminPassword(ctx.message.text.trim()))
+        ctx.sendMessage('Пароль от учетной записи успешно обновлен')
+      else  
+        ctx.sendMessage('Пароль от учетной записи не удалось обновить. Попробуйте обновить пароль позже.')
+      
+      getAvailableAdminCommands(ctx)
+      
+      ctx.session.scenario = COMMANDS.admin
+      ctx.session.nextCommand = 'adminAuthorize'
+    }
+    else if (ctx.message.text?.startsWith('/changedPrice')
     && ctx.session?.nextCommand === 'adminAuthorize') {
       ctx.session.scenario = COMMANDS.changedPrice
       ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
@@ -109,9 +135,12 @@ bot.on('message', async(ctx, next) => {
     } else if (ctx.session?.nextCommand === 'adminAuthorize' 
     && ctx.session.scenario === COMMANDS.changedPrice) {
       try {
-        let res = await ProductPrice.updateOne({ product_name: 'creditHistory' }, { $set: { price: Number(ctx.message.text.trim()) } })
-        if (res.modifiedCount === 0)
-          return
+        let productName = 'creditHistory'
+        let res = await ProductPrice.updateOne({ product_name: productName }, { $set: { price: Number(ctx.message.text.trim()) } })
+        if (res.modifiedCount === 0) {
+          console.log(`Parameters in documents ${Object.keys({ProductPrice})} didn't update. Product name - ${Object.keys({productName})}, price - ${ctx.message.text.trim()}`)
+          return ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
+        }
       }
       catch (ex) {
         console.log(ex)
@@ -121,7 +150,7 @@ bot.on('message', async(ctx, next) => {
       ctx.session.nextCommand = 'adminAuthorize'
 
       ctx.sendMessage(`Прайс выбранной услуги успешно изменен. Текущая стоимость услуги - ${ctx.message.text.trim()} руб.`)
-      ctx.sendMessage(`Админка \n\n Используйте команды, доступные для данной учетной записи:\n /changedPrice - изменение цены получения КИ`)
+      getAvailableAdminCommands(ctx)
     }
 
   if (ctx.message.contact || (ctx.message.text?.startsWith('+') && parseInt(ctx.message.text?.slice(1)))) {
@@ -210,7 +239,7 @@ bot.onError = function(err){
 bot.launch()
 console.log('Bot started')
 
-SetAdminCredentialsAsync()
+InitializeAdminCredentialsAsync()
 SetDefaultPrice("creditHistory", 100)
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
