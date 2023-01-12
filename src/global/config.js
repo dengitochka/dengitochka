@@ -1,6 +1,6 @@
 export default {
-  BOT_TOKEN: '5772763513:AAH3_9czBKTEBnc64C_7L6rpL_GErKPvErA', //`5772763513:AAH3_9czBKTEBnc64C_7L6rpL_GErKPvErA`
-  BOT_LOGIN: 'https://t.me/dengitochka_bot', //`https://t.me/roszalog_bot`,
+  BOT_TOKEN: '5738109429:AAE4cczTVS8lHo-80APdCKk-CKqsGpqxjqQ', //`5772763513:AAH3_9czBKTEBnc64C_7L6rpL_GErKPvErA`
+  BOT_LOGIN: 'dengitochka_bot', //`https://t.me/roszalog_bot`,
   DB_CONFIG: { useNewUrlParser: true, useUnifiedTopology: true },
   DB_URL: 'mongodb+srv://root:rViAmmjHisj7M9EW@roszalog.8llppu3.mongodb.net',
   DB_NAME: 'main',
