@@ -36,8 +36,9 @@ if (process.env.NODE_ENV.trim() === "development") {
   }
 
   const server = https.createServer(options, app)
-
-  server.listen(PORT, () => {
+  
+  let port = process.env.PORT || 5000;
+  server.listen(port, () => {
     console.log(`API Server running at ${API_ROOT} on port ${PORT}...`)
   })
 }
