@@ -4,6 +4,8 @@ import express from 'express'
 import cors from 'cors'
 import https from 'https'
 import bodyParser from 'body-parser'
+import order from './services/routes/order.js'
+import product from './services/routes/product.js'
 
 import { onNewZalogRequest } from './services/onNewZalogRequest.js'
 import { onNewInvestRequest } from './services/onNewInvestRequest.js'
@@ -20,9 +22,8 @@ app.get('/', (req, res) => {
   res.json({ status: 'Online', port: PORT })
 })
 
-app.post('/zalog', onNewZalogRequest)
-app.post('/invest', onNewInvestRequest)
-
+app.use('/order', order);
+app.use('/products', product);
 console.log(process.env.NODE_ENV);
 if (process.env.NODE_ENV.trim() === "development") {
   app.listen(PORT, () => {

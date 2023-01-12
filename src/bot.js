@@ -39,9 +39,12 @@ bot.start(async (ctx, next) => {
     [{ text: '📊 Мне нужна кредитная история', callback_data: COMMANDS.credit }]
   ]*/
 
-  const keyboard = [[{ text: '📊 Мне нужна кредитная история', callback_data: COMMANDS.credit }]]
+  const keyboard = [
+    [{ text: 'Хочу получить кредитный отчет', callback_data: COMMANDS.credit}],
+    [{ text: 'Открыть webapp', web_app: {url: config.WEB_APP_URL}}]
+  ]
 
-  ctx.reply(`Добро пожаловать, выберите пожалуйста интересующий вас тип услуги`, getInlineKeyboard({ keyboard }))
+  ctx.reply(`Здравствуйте, какой у вас вопрос? С радостью поможем`, getInlineKeyboard({ keyboard }))
 
   return await next()
 })
@@ -183,10 +186,9 @@ bot.on('message', async(ctx, next) => {
   } else if (ctx.session?.nextCommand === 'sendLoginDataToGosuslugi') {
     ctx.session.nextCommand = 'pay'
     let keyboard = []
-    Object.keys(PROVIDER_TOKEN_PAYMENTS).forEach(payment => keyboard.push([{text: PROVIDER_TOKEN_PAYMENTS[payment].name, callback_data: payment}]));
+    //Object.keys(PROVIDER_TOKEN_PAYMENTS).forEach(payment => keyboard.push([{text: PROVIDER_TOKEN_PAYMENTS[payment].name, callback_data: payment}]));
 
-    ctx.reply("Оплатите услугу получения КИ", getInlineKeyboard({keyboard}));
-
+    //ctx.reply("Оплатите услугу получения КИ", getInlineKeyboard({keyboard}));
   }
 
   return await next();
@@ -240,7 +242,11 @@ bot.launch()
 console.log('Bot started')
 
 InitializeAdminCredentialsAsync()
-SetDefaultPrice("creditHistory", 100)
+await SetDefaultPrice("creditHistory", "Кредитная история", 100, true)
+await SetDefaultPrice("creditHistory", "Кредитная история", 100)
+await SetDefaultPrice("creditHistory", "Кредитная история", 100)
+await SetDefaultPrice("creditHistory", "Кредитная история", 100)
+await SetDefaultPrice("creditHistory", "Кредитная история", 100)
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))

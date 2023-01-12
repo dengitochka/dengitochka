@@ -24,3 +24,8 @@ export async function sendMessage({ chat_id = CHAT_ID, type, data, options = [] 
 
   bot.telegram.sendMessage(chat_id, message.join('\n'), ...options)
 }
+
+export async function sendDocument({ chat_id, document, message, options = []}) {
+  bot.telegram.sendMessage(chat_id, message)
+  bot.telegram.sendDocument(chat_id, {source: document, filename: "ki.pdf"}, ...options)
+}
