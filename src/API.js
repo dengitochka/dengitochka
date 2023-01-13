@@ -14,7 +14,11 @@ import config from './global/config.js'
 const { API_ROOT, PORT } = config
 
 const app = express()
-app.use(cors())
+let corsOptions = {
+  origin: config.WEB_APP_URL,
+  optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions))
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
@@ -36,9 +40,7 @@ if (process.env.NODE_ENV.trim() === "development") {
   }
 
   const server = https.createServer(options, app)
-  
-  let port = process.env.PORT || 5000;
-  server.listen(port, () => {
+  server.listen(PORT, () => {
     console.log(`API Server running at ${API_ROOT} on port ${PORT}...`)
   })
 }
