@@ -39,8 +39,9 @@ if (process.env.NODE_ENV.trim() === "development") {
     cert: fs.readFileSync(path.join(process.cwd(), './ssl/fullchain.pem'))
   }
 
+  let port = process.env.PORT || 3000;
   const server = https.createServer(options, app)
-  server.listen(PORT, () => {
+  server.listen(port, () => {
     console.log(`API Server running at ${API_ROOT} on port ${PORT}...`)
   })
 }
