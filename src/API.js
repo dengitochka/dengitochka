@@ -14,7 +14,7 @@ import config from './global/config.js'
 const { API_ROOT, PORT } = config
 
 const app = express()
-app.use(cors())
+//app.use(cors())
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
