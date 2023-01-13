@@ -1,1 +1,1 @@
-worker: node ./API.js
+worker: node ./roszalog.js
