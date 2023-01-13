@@ -14,11 +14,7 @@ import config from './global/config.js'
 const { API_ROOT, PORT } = config
 
 const app = express()
-let corsOptions = {
-  origin: [config.WEB_APP_URL],
-  optionsSuccessStatus: 200
-}
-app.use(cors(corsOptions))
+app.use(cors())
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
