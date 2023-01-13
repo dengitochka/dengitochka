@@ -25,6 +25,12 @@ app.get('/', (req, res) => {
 app.use('/order', order);
 app.use('/products', product);
 console.log(process.env.NODE_ENV);
+
+app.on('clientError', (err, socket) => {
+  console.error(err);
+  socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+});
+
 if (process.env.NODE_ENV.trim() === "development") {
   app.listen(PORT, () => {
     console.log(`API Server running locally at http://localhost:${PORT}...`)
