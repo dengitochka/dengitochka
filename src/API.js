@@ -39,7 +39,7 @@ app.on('clientError', (err, socket) => {
 if (process.env.NODE_ENV.trim() === "development") {
   let port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`API Server running locally at http://localhost:${PORT}...`)
+    console.log(`API Server running locally at http://localhost:${port}...`)
   })
 } else {
   const options = {
