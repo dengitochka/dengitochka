@@ -1,1 +1,1 @@
-worker: node ./roszalog.js
+worker: npm run dev

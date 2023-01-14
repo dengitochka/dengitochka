@@ -37,7 +37,8 @@ app.on('clientError', (err, socket) => {
 });
 
 if (process.env.NODE_ENV.trim() === "development") {
-  app.listen(PORT, () => {
+  let port = process.env.PORT || 3000;
+  app.listen(port, () => {
     console.log(`API Server running locally at http://localhost:${PORT}...`)
   })
 } else {
@@ -46,9 +47,8 @@ if (process.env.NODE_ENV.trim() === "development") {
     cert: fs.readFileSync(path.join(process.cwd(), './ssl/fullchain.pem'))
   }
 
-  let port = process.env.PORT || 3000;
   const server = https.createServer(options, app)
   server.listen(port, () => {
-    console.log(`API Server running at ${API_ROOT} on port ${PORT}...`)
+    console.log(`API Server running at ${API_ROOT} on port ${port}...`)
   })
 }
