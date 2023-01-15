@@ -1,11 +1,11 @@
 export default {
-  BOT_TOKEN: '986084446:AAEjtg4aTK7Jg39ZNOqJQ8njdxwwu9kz3N0', //`5738109429:AAE4cczTVS8lHo-80APdCKk-CKqsGpqxjqQ`
+  BOT_TOKEN: '5738109429:AAE4cczTVS8lHo-80APdCKk-CKqsGpqxjqQ', //`5772763513:AAH3_9czBKTEBnc64C_7L6rpL_GErKPvErA`
   BOT_LOGIN: 'https://t.me/dengitochka_bot', //`https://t.me/roszalog_bot`,
   DB_CONFIG: { useNewUrlParser: true, useUnifiedTopology: true },
   DB_URL: 'mongodb+srv://root:rViAmmjHisj7M9EW@roszalog.8llppu3.mongodb.net',
   DB_NAME: 'main',
-  WEB_APP_URL: 'https://192.168.197.1:3000',
-  API_ROOT: 'https://localhost',
+  WEB_APP_URL: 'https://dengitochka-web-app.herokuapp.com/',
+  API_ROOT: 'https://server.dengitochka.ru',
   PORT: 8080,
   PROVIDER_TOKEN: '401643678:TEST:0508416f-dcbb-4995-a89a-cc641c5cef58'
   // CHAT_IDS: [1303646809, 2010840813],

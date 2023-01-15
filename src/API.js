@@ -32,7 +32,7 @@ app.use('/products', product);
 console.log(process.env.NODE_ENV);
 
 if (process.env.NODE_ENV.trim() === "development") {
-  let port =  PORT
+  let port = process.env.PORT || PORT
   app.listen(port, () => {
     console.log(`API Server running locally at http://localhost:${port}...`)
   })
