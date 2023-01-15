@@ -1,5 +1,6 @@
-desc "This task is called by the Heroku cron add-on"
-task :call_page => :environment do
-   uri = URI.parse('https://report-page.herokuapp.com/')
-   Net::HTTP.get(uri)
-end
+namespace :heroku do
+    desc 'restarts all the heroku dynos so we can control when they restart'
+    task :restart do
+      Heroku::API.
+    end
+  end
