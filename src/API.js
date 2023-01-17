@@ -14,7 +14,7 @@ import config from './global/config.js'
 const { API_ROOT, PORT } = config
 
 const app = express()
-const corsOptions ={
+const corsOptions = {
   origin: [config.WEB_APP_URL, "https://192.168.56.1:3000"], 
   credentials:true,            //access-control-allow-credentials:true
   optionSuccessStatus:200,

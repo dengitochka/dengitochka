@@ -1,6 +1,6 @@
 import { Telegraf, session } from 'telegraf'
 import { getInlineKeyboard } from './services/bot/_helper.js'
-import { COMMANDS, PROVIDER_TOKEN_PAYMENTS } from './global/config.js'
+import { SCENARIOS, PROVIDER_TOKEN_PAYMENTS } from './global/config.js'
 import config from './global/config.js'
 import TG from './models/TG.js'
 import { SetDefaultPrice, ProductPrice} from './models/price.js'
@@ -40,11 +40,12 @@ bot.start(async (ctx, next) => {
   ]*/
 
   const keyboard = [
-    [{ text: 'Хочу получить кредитный отчет', callback_data: COMMANDS.credit}],
-    [{ text: 'Открыть webapp', web_app: {url: config.WEB_APP_URL}}]
+    [{ text: 'Скачать кредитную историю!', callback_data: SCENARIOS.getCreditHistory}],
+    [{ text: 'Подписаться на обновление моей кредитной истории', callback_data: SCENARIOS.updateCreditHistory}]
   ]
 
-  ctx.reply(`Здравствуйте, какой у вас вопрос? С радостью поможем`, getInlineKeyboard({ keyboard }))
+  ctx.reply(`Привет! Наш бот поможет тебе скачать твою кредитную историю. И это совершенно бесплатно и занимает не больше 5 минут.
+  Также доступна подписка на уведомления об изменении вашей кредитной истории, это поможет вам управлять своей финансовой репутацией. Больше подробностей в нашем блоге.`, getInlineKeyboard({ keyboard }))
 
   return await next()
 })
@@ -78,7 +79,7 @@ bot.on('message', async(ctx, next) => {
     sendPhone(ctx);
   }
 
-  if(ctx.session?.scenario === COMMANDS.admin 
+  if(ctx.session?.scenario === SCENARIOS.admin 
     && ctx.session?.nextCommand === 'adminAuthorize' 
     && ctx.message.text?.startsWith('/changePrice')) {
       ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
@@ -86,11 +87,11 @@ bot.on('message', async(ctx, next) => {
 
   if(ctx.message.text?.startsWith('/admin')) {
       ctx.session = {scenario: null, nextCommand: null, login: null}
-    ctx.session.scenario = COMMANDS.admin
+    ctx.session.scenario = SCENARIOS.admin
     ctx.session.nextCommand = 'adminLogin'
     ctx.sendMessage('Вы перешли в сценарий входа в профиль администратора. Введите логин и пароль от учетной записи')
     ctx.sendMessage('Введите логин')
-  } else if (ctx.session?.scenario === COMMANDS.admin 
+  } else if (ctx.session?.scenario === SCENARIOS.admin 
     && ctx.session?.nextCommand === 'adminLogin') {
       let login = ctx.message.text.trim();
       let admin = await UserCredentials.findOne({user_login: login})
@@ -102,7 +103,7 @@ bot.on('message', async(ctx, next) => {
       ctx.session.nextCommand = 'adminPassword'
       ctx.sendMessage('Введите пароль')
 
-  } else if (ctx.session?.scenario === COMMANDS.admin
+  } else if (ctx.session?.scenario === SCENARIOS.admin
     && ctx.session?.nextCommand === 'adminPassword') {
       let adminPassword = ctx.message.text.trim();
       const { password, salt } = await UserCredentials.findOne({user_login: ctx.session.login})
@@ -113,13 +114,13 @@ bot.on('message', async(ctx, next) => {
       ctx.session.nextCommand = 'adminAuthorize'
       getAvailableAdminCommands(ctx, `Вы успешно авторизировались под пользователем ${ctx.session.login}.`)
   
-    } else if(ctx.session?.scenario === COMMANDS.admin 
+    } else if(ctx.session?.scenario === SCENARIOS.admin 
       && ctx.session?.nextCommand === 'adminAuthorize' 
       && ctx.message.text?.startsWith('/changePassword')) {
-        ctx.session.scenario = COMMANDS.changedPassword
+        ctx.session.scenario = SCENARIOS.changedPassword
         ctx.sendMessage('Введите новый пароль для текущей учетной записи')
     }else if(ctx.session?.nextCommand === 'adminAuthorize' 
-    && ctx.session.scenario === COMMANDS.changedPassword) {
+    && ctx.session.scenario === SCENARIOS.changedPassword) {
       if (UpdateAdminPassword(ctx.message.text.trim()))
         ctx.sendMessage('Пароль от учетной записи успешно обновлен')
       else  
@@ -127,16 +128,16 @@ bot.on('message', async(ctx, next) => {
       
       getAvailableAdminCommands(ctx)
       
-      ctx.session.scenario = COMMANDS.admin
+      ctx.session.scenario = SCENARIOS.admin
       ctx.session.nextCommand = 'adminAuthorize'
     }
     else if (ctx.message.text?.startsWith('/changedPrice')
     && ctx.session?.nextCommand === 'adminAuthorize') {
-      ctx.session.scenario = COMMANDS.changedPrice
+      ctx.session.scenario = SCENARIOS.changedPrice
       ctx.sendMessage('Для изменения прайса получения КИ введите определенную стоимость в рублях')
     
     } else if (ctx.session?.nextCommand === 'adminAuthorize' 
-    && ctx.session.scenario === COMMANDS.changedPrice) {
+    && ctx.session.scenario === SCENARIOS.changedPrice) {
       try {
         let productName = 'creditHistory'
         let res = await ProductPrice.updateOne({ product_name: productName }, { $set: { price: Number(ctx.message.text.trim()) } })
@@ -149,7 +150,7 @@ bot.on('message', async(ctx, next) => {
         console.log(ex)
       }
 
-      ctx.session.scenario = COMMANDS.admin
+      ctx.session.scenario = SCENARIOS.admin
       ctx.session.nextCommand = 'adminAuthorize'
 
       ctx.sendMessage(`Прайс выбранной услуги успешно изменен. Текущая стоимость услуги - ${ctx.message.text.trim()} руб.`)
@@ -178,7 +179,7 @@ bot.on('message', async(ctx, next) => {
     }
   }
 
-  if (ctx.session?.scenario === COMMANDS.credit 
+  if (ctx.session?.scenario === SCENARIOS.getCreditHistory 
     && ctx.session?.nextCommand === 'password') {
     ctx.reply('Напишите ваш пароль от госуслуг')
     ctx.session.nextCommand = 'sendLoginDataToGosuslugi'
@@ -193,12 +194,13 @@ bot.on('message', async(ctx, next) => {
 
   return await next();
 })
+
 bot.on('callback_query', onSentInvoice)
 bot.on('callback_query', onNewCommand)
 
 async function onSentInvoice(ctx, next) {
   if (ctx.session?.nextCommand === 'pay' 
-    && ctx.session?.scenario === COMMANDS.credit) {
+    && ctx.session?.scenario === SCENARIOS.getCreditHistory) {
     let invoice = await getInvoice(ctx.from.id, PROVIDER_TOKEN_PAYMENTS[ctx.update.callback_query.data].token);
 
     return ctx.replyWithInvoice(invoice)
@@ -211,31 +213,53 @@ async function onNewCommand(ctx, next) {
   if (ctx.session === undefined)
     ctx.session = {scenario: null, nextCommand: null, login: null}
   const command = ctx.update.callback_query.data
-  if (command === COMMANDS.invest) {
+
+  if (ctx.session?.nextCommand === 'offerGotCreditHistoryWay') {
+
+    if (command === SCENARIOS.approvalOfferConditional) {
+      if (ctx.session?.scenario === SCENARIOS.getCreditHistory) {
+        const keyboard = [
+          [{ text: 'Продолжить в чате', callback_data: SCENARIOS.approvalOfferConditional}], 
+          [{ text: 'Получить через WebApp', web_app: {url: config.WEB_APP_URL}}]
+        ]
+  
+        ctx.sendMessage('Выберите оптимальный способ получения кредититного отчета.', getInlineKeyboard({keyboard}))
+      }
+      else if (ctx.session?.scenario === SCENARIOS.updateCreditHistory) {
+  
+        ctx.sendMessage('Вы подписались на обновление кредитного отчета. При его изменении будет выслана новая версия отчета в текущий чат телеграмма.')
+      }
+    }
+    else if (command === SCENARIOS.disapprovalOfferConditional) {
+      ctx.sendMessage('Вы отказались от условий обработки персональных данных.' +
+      'К сожалению, мы не можем подтвердить вашу личность и выдать вам кредитный отчет без принятия условий обработки данных.')
+    }
+  }
+  else if (command === SCENARIOS.getCreditHistory || command === SCENARIOS.updateCreditHistory) {
+    const keyboard = [
+      [{ text: 'Согласие', callback_data: SCENARIOS.approvalOfferConditional}, 
+      { text: 'Отказ', callback_data: SCENARIOS.disapprovalOfferConditional}]
+    ]
+
+    ctx.reply('Для получения кредитных историй необходимо дать согласие на обработку персональных данных. ' + 
+    '(Здесь будет прикреплен фаил)', getInlineKeyboard({keyboard}))
+    
+    ctx.session.scenario = command === SCENARIOS.getCreditHistory ? SCENARIOS.getCreditHistory : SCENARIOS.updateCreditHistory
+    ctx.session.nextCommand = 'offerGotCreditHistoryWay'
+  } else if (command === SCENARIOS.invest) {
     ctx.reply('Для того что бы получать заявки давайте пройдем регистрацию\nДля этого вам нужно будет заполнить анкету\nВведите ваше имя в формате: /name Иван\nВведите вашу фамилию в формате: /surname Иванов\nДля того что бы отправить номер телефона введите команду /phone, и нажмине на кнопку ниже\nДля того что бы отправить заявку нажмите или  введите команду /send')
-    TG.create({ type: COMMANDS.invest, chatId: ctx.update.callback_query.message.chat.id })
+    TG.create({ type: SCENARIOS.invest, chatId: ctx.update.callback_query.message.chat.id })
   }
-  if (command === COMMANDS.broker) {
+  else if (command === SCENARIOS.broker) {
     ctx.reply('Для того что бы получать заявки давайте пройдем регистрацию\nДля этого вам нужно будет заполнить анкету\nВведите ваше имя в формате: /name Иван\nВведите вашу фамилию в формате: /surname Иванов\nДля того что бы отправить номер телефона введите команду /phone, и нажмине на кнопку ниже\nДля того что бы отправить заявку нажмите или введите команду /send')
-    TG.create({ type: COMMANDS.broker, chatId: ctx.update.callback_query.message.chat.id })
+    TG.create({ type: SCENARIOS.broker, chatId: ctx.update.callback_query.message.chat.id })
   }
-  if (command === COMMANDS.zalog) {
+  else if (command === SCENARIOS.zalog) {
     ctx.reply('Для того что бы получать заявки давайте пройдем регистрацию\nДля этого вам нужно будет заполнить анкету\nВведите ваше имя в формате: /name Иван\nВведите вашу фамилию в формате: /surname Иванов\nДля того что бы отправить номер телефона введите команду /phone, и нажмине на кнопку ниже\nДля того что бы отправить заявку нажмите или введите команду /send')
-    TG.create({ type: COMMANDS.zalog, chatId: ctx.update.callback_query.message.chat.id })
-  }
-  if (command === COMMANDS.credit) {
-    ctx.reply('Для получения кредитной истории необходимо ввести номер телефона и пароль от вашего личного кабинета в системе Госуслуги')
-    TG.create({ type: COMMANDS.credit, chatId: ctx.update.callback_query.message.chat.id })
-    sendPhone(ctx)
-    ctx.session.scenario = COMMANDS.credit;
+    TG.create({ type: SCENARIOS.zalog, chatId: ctx.update.callback_query.message.chat.id })
   }
 
   return next();
-}
-
-bot.onError = function(err){
-  log.error('Server error:', err)
-  throw err
 }
 
 bot.launch()
