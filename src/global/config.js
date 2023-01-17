@@ -4,7 +4,7 @@ export default {
   DB_CONFIG: { useNewUrlParser: true, useUnifiedTopology: true },
   DB_URL: 'mongodb+srv://root:rViAmmjHisj7M9EW@roszalog.8llppu3.mongodb.net',
   DB_NAME: 'main',
-  WEB_APP_URL: 'https://dengitochka-web-app.herokuapp.com',
+  WEB_APP_URL: 'https://192.168.56.1:3000',
   API_ROOT: 'https://server.dengitochka.ru',
   PORT: 8080,
   PROVIDER_TOKEN: '401643678:TEST:0508416f-dcbb-4995-a89a-cc641c5cef58'
@@ -13,15 +13,18 @@ export default {
   //CHAT_ID: -1001654902402,
 }
 
-export const COMMANDS = {
+export const SCENARIOS = {
   invest: 'invest',
   zalog: 'zalog',
   broker: 'broker',
   send: 'send',
-  credit: 'credit',
+  getCreditHistory: 'creditHistory',
+  updateCreditHistory: 'updateCreditHistory',
   admin: 'admin',
   changedPrice: 'changedPrice',
-  changedPassword: 'changedPassword'
+  changedPassword: 'changedPassword',
+  approvalOfferConditional: 'approvalOfferConditional',
+  disapprovalOfferConditional: 'disapprovalOfferConditional'
 }
 
 export const PROVIDER_TOKEN_PAYMENTS = {
