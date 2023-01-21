@@ -41,7 +41,7 @@ bot.start(async (ctx, next) => {
 
   const keyboard = [
     [{ text: 'Скачать кредитную историю!', callback_data: SCENARIOS.getCreditHistory}],
-    [{ text: 'Подписаться на обновление моей кредитной истории', callback_data: SCENARIOS.updateCreditHistory}]
+    [{ text: 'Подписаться на обновление кредитной истории', callback_data: SCENARIOS.updateCreditHistory}]
   ]
 
   ctx.reply(`Привет! Наш бот поможет тебе скачать твою кредитную историю. И это совершенно бесплатно и занимает не больше 5 минут.
