@@ -1,7 +1,8 @@
 export function getInlineKeyboard({ keyboard }) {
   return {
     reply_markup: {
-      inline_keyboard: keyboard
+      inline_keyboard: keyboard,
+      resize_keyboard: false
     }
   }
 }
